@@ -41,8 +41,13 @@ ui <- fluidPage(
                               #inputs for Bond Contract Terms
                               dateInput(inputId = "issueDate", 
                                        label = "Choose Issuedate",
-                                       value = "2013-12-31"
+                                       value = "2020-12-31"
                                        ),
+                              sliderInput(inputId = "maturity",
+                                          label = "Choose the maturity",
+                                          min = 1,max = 10,
+                                          value = 5,
+                                          step = 1),
                               numericInput(inputId = "nominal",
                                           label = "Choose the nominal",
                                           value = 10000,min = 0, 
@@ -53,13 +58,22 @@ ui <- fluidPage(
                                           value = 0.02,min = 0,max = 0.15,
                                           step = 0.001
                                           ),
+                              selectInput(inputId = "couponFreq",
+                                          label = "Choose the coupon frequency",
+                                          choices = c("3 months", "6 months", "1 years")),
                               selectInput(inputId = "rfScenarioBond", 
                                          label = "Choose the Risk Factor Scenario",
                                          choices = c("increasing Rates",
                                                      "decreasing Rates",
                                                      "steady Rates",
-                                                     "recovering Rates")
-                                         )
+                                                     "recovering Rates")),
+                              selectInput(inputId = "rateReset",
+                                          label = "Choose the rate reset frequency",
+                                          choices = c("NULL", "1 months", "3 months", "6 months", "1 years")),
+                              sliderInput(inputId = "rateSpread",
+                                          label = "Choose the rate spread",
+                                          min = 0,max = 0.05, 
+                                          value = 0.02,step = 0.01)
                               ),   #sidebar panel close
                                       
                               # Show a plot of the generated cashflows
@@ -105,7 +119,38 @@ ui <- fluidPage(
                                        )   #main panel close
                               )   #sidebarLayout close
                                      
-                       )   #tab panel close
+                       ),   #tab panel close
+                   tabPanel("Analysis of your own data",
+                            sidebarLayout(
+                              sidebarPanel(width = 3,
+                                           fileInput(inputId = "uploadedFile",
+                                                     label = "Please upload your own csv file of ACTUS Contracts",
+                                                     accept = ".csv",
+                                                     buttonLabel = "Browse...",
+                                                     placeholder = "No file slected"
+                                                     ),
+                                           selectInput(
+                                             inputId = "analysisTypeCus",
+                                             label = "Choose the analysis type",
+                                             choices =  c("monthly income",
+                                                          "cumulative income",
+                                                          "monthly liquidity change",
+                                                          "accumulated liquidity")
+                                                      ),
+                                           selectInput(
+                                             inputId = "rfScenarioCus",
+                                             label = "Choose the Risk Factor Scenario",
+                                             choices = c("increasing Rates",
+                                                         "decreasing Rates",
+                                                         "steady Rates",
+                                                         "recovering Rates")
+                                                      )
+                                           ),#sidebarpanel close
+                              mainPanel(
+                                plotOutput(outputId = "CFPlotCus")
+                              )#mainPanel close
+                            )#sidebarlayout close
+                            )#tab panel close
                    )   #navbarPAGE close
               )   #fluid Page close
 
@@ -113,9 +158,11 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   #reactive creation of the example bond
-  pam1 <- reactive({bond(as.character(input$issueDate), maturity = "5 years", 
+  pam1 <- reactive({bondvr(as.character(input$issueDate), maturity = paste(input$maturity, "years"), 
                          nominal = input$nominal, coupon = input$coupon,
-                         couponFreq = "1 years", role = "RPA")
+                         couponFreq = input$couponFreq, role = "RPA",
+                         rateResetFreq = input$rateReset,
+                         rateResetSpread = input$rateSpread)
                   })
   
   #read the data files from inside of the package
@@ -266,6 +313,43 @@ server <- function(input, output) {
     plotlist()[[input$analysisType]]
     })
   
+  })   #observe close
+  
+  observe({
+    if(is.null(input$uploadedFile) != TRUE){
+      file <- reactive(input$uploadedFile)
+      cdfn <- file()$datapath
+      rfdfn <- system.file("extdata","RiskFactors.csv",package = "FEMSdevBase")
+      
+      #create the portfolio with the respective files
+      ptf1   <-  samplePortfolio(cdfn,rfdfn)
+      
+      
+      #create eventSeries for the selected contract
+      if(input$rfScenarioCus == "decreasing Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_falling),
+                                                  rfx_falling$riskFactorID))
+      }
+      
+      if(input$rfScenarioCus == "increasing Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_rising),
+                                                  rfx_rising$riskFactorID))
+      }
+      if(input$rfScenarioCus == "steady Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_steady),
+                                                  rfx_rising$riskFactorID))
+      }
+      if(input$rfScenarioCus == "recovering Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, 
+                                                  list(rfx_recovering),
+                                                  rfx_rising$riskFactorID))
+      }
+      
+      output$CFPlotCus <- renderPlot({
+        plotlistCus()[[input$analysisTypeCus]]
+      })
+    }
+    
   })   #observe close
   
 }      #server close
