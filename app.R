@@ -41,8 +41,13 @@ ui <- fluidPage(
                               #inputs for Bond Contract Terms
                               dateInput(inputId = "issueDate", 
                                        label = "Choose Issuedate",
-                                       value = "2013-12-31"
+                                       value = "2020-12-31"
                                        ),
+                              sliderInput(inputId = "maturity",
+                                          label = "Choose the maturity",
+                                          min = 1,max = 10,
+                                          value = 5,
+                                          step = 1),
                               numericInput(inputId = "nominal",
                                           label = "Choose the nominal",
                                           value = 10000,min = 0, 
@@ -50,16 +55,27 @@ ui <- fluidPage(
                                           ),
                               numericInput(inputId = "coupon",
                                           label = "Choose the Couponrate",
-                                          value = 0.02,min = 0,max = 0.15,
-                                          step = 0.001
+                                          value = 0.02,min = 0,max = 0.05,
+                                          step = 0.005
                                           ),
+                              selectInput(inputId = "paymentFreq",
+                                          label = "Choose the payment frequency",
+                                          choices = c("3 months", "6 months", "1 year")),
                               selectInput(inputId = "rfScenarioBond", 
                                          label = "Choose the Risk Factor Scenario",
                                          choices = c("increasing Rates",
                                                      "decreasing Rates",
                                                      "steady Rates",
-                                                     "recovering Rates")
-                                         )
+                                                     "recovering Rates")),
+                              selectInput(inputId = "rateResetFreq",
+                                          label = "Choose the rate reset frequency",
+                                          choices = c("Fixed rate","1 month", 
+                                                      "3 months", "6 months",
+                                                      "1 year")),
+                              sliderInput(inputId = "rateSpread",
+                                          label = "Choose the rate spread",
+                                          min = 0,max = 0.05, 
+                                          value = 0.02,step = 0.01)
                               ),   #sidebar panel close
                                       
                               # Show a plot of the generated cashflows
@@ -105,7 +121,47 @@ ui <- fluidPage(
                                        )   #main panel close
                               )   #sidebarLayout close
                                      
-                       )   #tab panel close
+                       ),   #tab panel close
+                   tabPanel("Analysis of your data",
+                      sidebarLayout(
+                          sidebarPanel(width = 6, p(" "),
+  " Here you can upload a data file from your workstation specifying a portfolio of bond contracts ",
+  "and request ACTUS contract simulation and analysis of it. ",
+  " The uploaded file must be in .csv format and patterned on file: ",
+  tags$a("BondPortfolio.csv", 
+         href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/BondPortfolio.csv"),
+  " - with any variable rate setting based on Market Object Code YC_EA_AAA.",
+  "For a more detailed explanation of each contract term, consult the ",
+  tags$a("ACTUS Data Dictionary", href = "https://www.actusfrf.org/dictionary"),
+  ".", p(" "),
+                                           fileInput(inputId = "uploadedFile",
+                                                     label = "Your csv file of ACTUS PAM Contracts",
+                                                     accept = ".csv",
+                                                     buttonLabel = "Browse...",
+                                                     placeholder = "No file selected"
+                                                     ),
+                                           selectInput(
+                                             inputId = "analysisTypeCus",
+                                             label = "Choose the analysis type",
+                                             choices =  c("monthly income",
+                                                          "cumulative income",
+                                                          "monthly liquidity change",
+                                                          "accumulated liquidity")
+                                                      ),
+                                           selectInput(
+                                             inputId = "rfScenarioCus",
+                                             label = "Choose the Risk Factor Scenario",
+                                             choices = c("increasing Rates",
+                                                         "decreasing Rates",
+                                                         "steady Rates",
+                                                         "recovering Rates")
+                                                      )
+                                           ),#sidebarpanel close
+                              mainPanel(
+                                plotOutput(outputId = "CFPlotCus")
+                              )  #mainPanel close
+                            )  #sidebarlayout close
+                            )  #tab panel close
                    )   #navbarPAGE close
               )   #fluid Page close
 
@@ -113,9 +169,12 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   #reactive creation of the example bond
-  pam1 <- reactive({bond(as.character(input$issueDate), maturity = "5 years", 
+  pam1 <- reactive({bondvr(as.character(input$issueDate), 
+                         maturity = paste(as.character(input$maturity), " years"), 
                          nominal = input$nominal, coupon = input$coupon,
-                         couponFreq = "1 years", role = "RPA")
+                         paymentFreq = input$paymentFreq, role = "RPA",
+                         rateResetFreq = input$rateResetFreq,
+                         rateResetSpread = input$rateSpread)
                   })
   
   #read the data files from inside of the package
@@ -266,6 +325,43 @@ server <- function(input, output) {
     plotlist()[[input$analysisType]]
     })
   
+  })   #observe close
+  
+  observe({
+    if(is.null(input$uploadedFile) != TRUE){
+      file <- reactive(input$uploadedFile)
+      cdfn <- file()$datapath
+      rfdfn <- system.file("extdata","RiskFactors.csv",package = "FEMSdevBase")
+      
+      #create the portfolio with the respective files
+      ptf1   <-  samplePortfolio(cdfn,rfdfn)
+      
+      
+      #create eventSeries for the selected contract
+      if(input$rfScenarioCus == "decreasing Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_falling),
+                                                  rfx_falling$riskFactorID))
+      }
+      
+      if(input$rfScenarioCus == "increasing Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_rising),
+                                                  rfx_rising$riskFactorID))
+      }
+      if(input$rfScenarioCus == "steady Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_steady),
+                                                  rfx_rising$riskFactorID))
+      }
+      if(input$rfScenarioCus == "recovering Rates"){
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, 
+                                                  list(rfx_recovering),
+                                                  rfx_rising$riskFactorID))
+      }
+      
+      output$CFPlotCus <- renderPlot({
+        plotlistCus()[[input$analysisTypeCus]]
+      })
+    }
+    
   })   #observe close
   
 }      #server close
