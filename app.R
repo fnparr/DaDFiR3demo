@@ -95,7 +95,7 @@ ui <- fluidPage(
                           sidebarPanel(width = 3,
                               selectInput("ptfFile","Choose your Portfolio",
                                           choices = c("BondPortfolio",
-                                                      "MixedPortfolio"),
+                                                      "MortgagePortfolio"),
                                           selected = "BondPortfolio"),
                                           selectInput(
                                               inputId = "analysisType",
@@ -292,8 +292,8 @@ server <- function(input, output) {
     if(input$ptfFile == "BondPortfolio"){
       cdfn <- system.file("extdata","BondPortfolio.csv",package = "FEMSdevBase")
       }
-    if(input$ptfFile == "MixedPortfolio"){
-      cdfn <- system.file("extdata","BondPortfolio.csv",package = "FEMSdevBase")
+    if(input$ptfFile == "MortgagePortfolio"){
+      cdfn <- system.file("extdata","AnnuityPortfolio.csv",package = "FEMSdevBase")
       }
     rfdfn <- system.file("extdata","RiskFactors.csv",package = "FEMSdevBase")
     
