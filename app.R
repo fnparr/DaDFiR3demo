@@ -35,10 +35,15 @@ ui <- fluidPage(
                          )  #sidebar close
                    ),  #tabpanel close
                    #second tabpanel Cashflow Exmaple
-                   tabPanel("Cashflow Example for a Bond",
+                   tabPanel("Cashflow Example for a Loan",
                        sidebarLayout(
                           sidebarPanel(width = 3,
                               #inputs for Bond Contract Terms
+                              selectInput(inputId = "contractType",
+                                          label = "Please choose which contract type you want to create",
+                                          choices = c("PAM","ANN"),
+                                          selected = "PAM"
+                                          ),
                               dateInput(inputId = "issueDate", 
                                        label = "Choose Issuedate",
                                        value = "2020-12-31"
@@ -47,7 +52,8 @@ ui <- fluidPage(
                                           label = "Choose the maturity",
                                           min = 1,max = 10,
                                           value = 5,
-                                          step = 1),
+                                          step = 1
+                                          ),
                               numericInput(inputId = "nominal",
                                           label = "Choose the nominal",
                                           value = 10000,min = 0, 
@@ -69,7 +75,7 @@ ui <- fluidPage(
                                                      "recovering Rates")),
                               selectInput(inputId = "rateReset",
                                           label = "Choose the rate reset frequency",
-                                          choices = c("NULL", "1 months", "3 months", "6 months", "1 years")),
+                                          choices = c(NULL, "1 months", "3 months", "6 months", "1 years")),
                               sliderInput(inputId = "rateSpread",
                                           label = "Choose the rate spread",
                                           min = 0,max = 0.05, 
@@ -156,14 +162,9 @@ ui <- fluidPage(
 
 # Define server logic required to create the cash flows of a simple bond
 server <- function(input, output) {
-  
-  #reactive creation of the example bond
-  pam1 <- reactive({bondvr(as.character(input$issueDate), maturity = paste(input$maturity, "years"), 
-                         nominal = input$nominal, coupon = input$coupon,
-                         couponFreq = input$couponFreq, role = "RPA",
-                         rateResetFreq = input$rateReset,
-                         rateResetSpread = input$rateSpread)
-                  })
+  # set the ACTUS serverURL
+  serverURL = "https://demo.actusfrf.org:8080/"
+  #   serverURL <- "http://ractus.ch:8080/"
   
   #read the data files from inside of the package
   falling_fp <- system.file("extdata","UST5Y_fallingRates.csv", 
@@ -184,35 +185,52 @@ server <- function(input, output) {
                                      "YC_EA_AAA",100 )
   rfx_recovering <- sampleReferenceIndex(recovering_fp,"UST5Y_steadyRates",
                                          "YC_EA_AAA",100 )
-  # set the ACTUS serverURL
-   serverURL = "https://demo.actusfrf.org:8080/"
-#   serverURL <- "http://ractus.ch:8080/"
+  
+  #reactive creation of the example bond
+  observe({
+    if(input$contractType == "PAM"){
+      cnt1 <- reactive({bondvr(as.character(input$issueDate), maturity = paste(input$maturity, "years"), 
+                               nominal = input$nominal, coupon = input$coupon,
+                               paymentFreq = input$couponFreq, role = "RPA",
+                               rateResetFreq = input$rateReset,
+                               rateResetSpread = input$rateSpread)
+      })
+    }
+    
+    if(input$contractType == "ANN"){
+      cnt1 <- reactive({mortgage(as.character(input$issueDate), maturity = paste(input$maturity, "years"), 
+                             nominal = input$nominal, coupon = input$coupon,
+                             paymentFreq = input$couponFreq, role = "RPA",
+                             rateResetFreq = input$rateReset,
+                             rateResetSpread = input$rateSpread)
+      })
+    }
+
   
   #reactive creation of the events for the bond
-  observe({
      if(input$rfScenarioBond == "increasing Rates"){
-          evs1 <- reactive({generateEventSeries(contract = pam1(), 
+          evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                                 list(rfx_rising),
                                                 serverURL  
                                                 )
                           })
           }
     if(input$rfScenarioBond == "decreasing Rates"){
-          evs1 <- reactive({generateEventSeries(contract = pam1(), 
+          evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                                 list(rfx_falling),
                                                 serverURL  
                                                 )
                           })
            }
     if(input$rfScenarioBond == "steady Rates"){
-          evs1 <- reactive({generateEventSeries(contract = pam1(), 
+          evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                                 list(rfx_steady),
                                                 serverURL  
                                                 )
                            })
           }
     if(input$rfScenarioBond == "recovering Rates"){
-          evs1 <- reactive({generateEventSeries(contract = pam1(), 
+          evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                                 list(rfx_recovering),
                                                 serverURL  
                                                 )
