@@ -39,9 +39,8 @@ ui <- fluidPage(
                        sidebarLayout(
                           sidebarPanel(width = 3,
                               #inputs for Loan Contract Terms
-                              #inputs for Bond Contract Terms
                               selectInput(inputId = "contractType",
-                                          label = "Select loan contract type to create",
+                                          label = "Loan contract type",
                                           choices = c("PAM","ANN"),
                                           selected = "PAM"
                               ),
@@ -50,47 +49,43 @@ ui <- fluidPage(
                                        value = "2020-12-31"
                               ),
                               sliderInput(inputId = "maturity",
-                                          label = "Choose the maturity",
+                                          label = "Choose maturity",
                                           min = 1,max = 10,
                                           value = 5,
                                           step = 1
                               ),
                               numericInput(inputId = "nominal",
-                                          label = "Choose the nominal",
+                                          label = "Set loan amount",
                                           value = 10000,min = 0, 
                                           max = 10000000, step = 1000
                               ),
                               numericInput(inputId = "coupon",
-                                          label = "Choose the Couponrate",
+                                          label = "Interest rate",
                                           value = 0.02,min = 0,max = 0.05,
                                           step = 0.005
                               ),
                               selectInput(inputId = "paymentFreq",
-                                          label = "Choose the payment frequency",
+                                          label = "Payment frequency",
                                           choices = c("3 months", "6 months", "1 year")
-                              ),
-                              selectInput(inputId = "rfScenarioBond", 
-                                         label = "Choose an Interest Rate Scenario",
-                                         choices = c("increasing Rates",
-                                                     "decreasing Rates",
-                                                     "steady Rates",
-                                                     "recovering Rates")
-                              ),
+                                          ),
                               selectInput(inputId = "rateResetFreq",
-                                          label = "Choose the rate reset frequency",
+                                          label = "Rate reset frequency",
                                           choices = c("Fixed rate","1 month", 
                                                       "3 months", "6 months",
-                                                      "1 year")
-                              ),
- #                             sliderInput(inputId = "rateResetSpread",
- #                                        label = "Choose the rate spread",
- #                                         min = 0,max = 0.05, 
- #                                        value = 0.02,step = 0.01)
-                              numericInput(inputId = "spread",
-                                           label = "Choose RateReset Spread",
-                                           value = 0.03, min = 0, max = 0.05,
+                                                      "1 year" ) 
+                                          ),
+                              numericInput(inputId = "rateResetSpread",
+                                           label = "Rate reset spread",
+                                           value = 0.05, min = 0, max = 0.05,
                                            step = 0.005
-                                           )
+                                           ),
+                              selectInput(inputId = "rfScenarioBond", 
+                                          label = "Interest rate scenario",
+                                          choices = c("increasing Rates",
+                                                      "decreasing Rates",
+                                                      "steady Rates",
+                                                      "recovering Rates")
+                                          )
                               ),   #sidebar panel close
                                       
                               # Show a plot of the generated cashflows
@@ -105,7 +100,7 @@ ui <- fluidPage(
                               ) #sidebar close
                    ),   #tabpanel close
                    #inputs for the modelbank
-                   tabPanel("Analysis of ModelBank",
+                   tabPanel("Portfolio Analysis",
                       sidebarLayout(
                           sidebarPanel(width = 3,
                               selectInput("ptfFile","Choose your Portfolio",
@@ -137,14 +132,17 @@ ui <- fluidPage(
                               )   #sidebarLayout close
                                      
                        ),   #tab panel close
-                   tabPanel("Analysis of your data",
+                   tabPanel("Uploaded Portfolio Analysis",
                       sidebarLayout(
                           sidebarPanel(width = 6, p(" "),
-  " Here you can upload a data file from your workstation specifying a portfolio of bond contracts ",
-  "and request ACTUS contract simulation and analysis of it. ",
-  " The uploaded file must be in .csv format and patterned on file: ",
+  " Here you can upload a data file from your workstation specifying a portfolio of loan contracts ",
+  "and request ACTUS contract simulation and analysis. ",
+  " The uploaded file must be .csv format and patterned on files: ",
   tags$a("BondPortfolio.csv", 
          href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/BondPortfolio.csv"),
+  ",  and ",
+  tags$a("AnnuityPortfolio.csv", 
+         href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/AnnuityPortfolio.csv"),
   " - with any variable rate setting based on Market Object Code YC_EA_AAA.",
   "For a more detailed explanation of each contract term, consult the ",
   tags$a("ACTUS Data Dictionary", href = "https://www.actusfrf.org/dictionary"),
@@ -209,25 +207,13 @@ server <- function(input, output) {
                                          "YC_EA_AAA",100 )
   #reactive creation of the example bond
   observe({
-    if(input$contractType == "PAM"){
-      cnt1 <- reactive({bondvr(as.character(input$issueDate), maturity = paste(input$maturity, "years"), 
-                               nominal = input$nominal, coupon = input$coupon,
-                               paymentFreq = input$paymentFreq, role = "RPA",
-                               rateResetFreq = input$rateResetFreq,
-                               rateResetSpread = input$rateResetSpread
-                               )
-      })
-    }
-    
-    if(input$contractType == "ANN"){
-      cnt1 <- reactive({mortgage(as.character(input$issueDate), maturity = paste(input$maturity, "years"), 
-                                 nominal = input$nominal, coupon = input$coupon,
-                                 paymentFreq = input$paymentFreq, role = "RPA",
-                                 rateResetFreq = input$rateResetFreq,
-                                 rateResetSpread = input$rateResetSpread
-                                 )
-      })
-    }
+      cnt1 <- reactive({loan(input$contractType, as.character(input$issueDate),
+                             maturity = paste(input$maturity, "years"), 
+                             nominal = input$nominal, coupon = input$coupon,
+                             paymentFreq = input$paymentFreq, role = "RPA",
+                             rateResetFreq = input$rateResetFreq,
+                             rateResetSpread = input$rateResetSpread )
+                       })
     
   #reactive creation of the events for the bond
      if(input$rfScenarioBond == "increasing Rates"){

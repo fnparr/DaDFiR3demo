@@ -5,9 +5,9 @@ account: fnparr
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7328753
-bundleId: 6471342
+bundleId: 6479243
 url: https://fnparr.shinyapps.io/DaDFiR3demo/
-when: 1667482692.47703
-lastSyncTime: 1667482692.47705
+when: 1667664613.81218
+lastSyncTime: 1667664613.81219
 asMultiple: FALSE
 asStatic: FALSE
