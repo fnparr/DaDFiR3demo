@@ -3,8 +3,12 @@ library(shinythemes)
 library(FEMSdevBase)
 library(ggplot2)
 
+shinycssloaders::withSpinner(
+  plotOutput("plot")
+)
 
-# Define UI for application that visualizes cashflows for a exmaple bond
+# 
+# Define UI for application that visualizes cashflows for a example bond
 ui <- fluidPage(
   theme = shinytheme("cerulean"),
   
@@ -14,7 +18,8 @@ ui <- fluidPage(
   img(src="Logo_Weiss.png",height = 80, width = 100),
   
   # Title and bar with tabs
-  navbarPage("DaDFiR3 Demo",   #navbar App title
+  navbarPage("
+             DaDFiR3 Demo",   #navbar App title
              tabPanel("Interest Rate Scenarios", #first Tab title
                       sidebarLayout(
                         #dataset choice input
@@ -102,7 +107,7 @@ ui <- fluidPage(
                                                  choices = c("BondPortfolio",
                                                              "MortgagePortfolio"),
                                                  selected = "BondPortfolio"
-                                                 ),
+                                     ),
                                      selectInput(
                                        inputId = "analysisType",
                                        label = "Choose the analysis type",
@@ -124,9 +129,9 @@ ui <- fluidPage(
                         mainPanel(width = 8 ,shinycssloaders::withSpinner(
                           plotOutput("CFPlot")
                         ),   #spinner close
-                          column(
-                            dataTableOutput("portfolioDF"),
-                            width = 12) #column close
+                        column(
+                          dataTableOutput("portfolioDF"),
+                          width = 12) #column close
                         )   #main panel close
                       )   #sidebarLayout close
                       
@@ -167,11 +172,15 @@ ui <- fluidPage(
                           plotOutput("CFPlotCus"),
                           column(
                             dataTableOutput("portfolioDF_u"),
-                                 width = 12)#column close
+                            width = 12)#column close
                         )  #mainPanel close
                       )  #sidebarlayout close
              ),  #tab panel close
              tabPanel("Help",
+                      sidebarLayout(
+                        sidebarPanel(
+                          textInput("serverUrl","Specify your server URL",value = "https://demo.actusfrf.org:8080/")
+                        ),
                         mainPanel(
                           h2("Interest Rate Scenarios"),
                           h4("In this tab you can view the four predefined interest rate scenarios. 
@@ -185,35 +194,42 @@ ui <- fluidPage(
                           h4("In this tab one can carry out analytics on predefined Portfolios. Income and liquidity metrics are 
                           shown in the plot and the respective contracts of the portfolio are displayed in the DataTable", style ="color:black"),
                           h2("Uploaded Portfolio Analysis"),
-                                     h4("You can upload a data file from your workstation specifying a portfolio 
+                          h4("You can upload a data file from your workstation specifying a portfolio 
                                         of loan contracts and request ACTUS contract simulation and analysis.",
-                                     "The uploaded file must be .csv format and patterned on files:",
-                                     tags$a("BondPortfolio.csv", 
-                                            href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/BondPortfolio.csv", target = "_blank"),
-                                     ",  and ",
-                                     tags$a("AnnuityPortfolio.csv", 
-                                            href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/AnnuityPortfolio.csv", target = "_blank"),
-                                     " - with any variable rate setting based on Market Object Code YC_EA_AAA.",
-                                     "For a more detailed explanation of each contract term, consult the ",
-                                     tags$a("ACTUS Data Dictionary",     href="https://www.actusfrf.org/dictionary", target = "_blank"), style ="color:black"),
+                             "The uploaded file must be .csv format and patterned on files:",
+                             tags$a("BondPortfolio.csv", 
+                                    href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/BondPortfolio.csv", target = "_blank"),
+                             ",  and ",
+                             tags$a("AnnuityPortfolio.csv", 
+                                    href="https://github.com/fnparr/FEMSdevBase/tree/main/inst/extdata/AnnuityPortfolio.csv", target = "_blank"),
+                             " - with any variable rate setting based on Market Object Code YC_EA_AAA.",
+                             "For a more detailed explanation of each contract term, consult the ",
+                             tags$a("ACTUS Data Dictionary",     href="https://www.actusfrf.org/dictionary", target = "_blank"), style ="color:black"),
+                          h2("Specification of ServerURL"),
+                          h4("In case you want to use a local installation of an ACTUS server, you can specify the serverURL in the sidebar of the Help Tab. By default, the ServerURL is set to:", 
+                             tags$a("https://demo.actusfrf.org:8080/",href = "https://demo.actusfrf.org:8080/", target = "_blank") ,"(public actus server)", style = "color:black"),
+                          h4(tags$b("IMPORTANT:"),"If you use a docker version of actus-server your serverURL must be: host.docker.internal:PORT/)", style = "color:black"), 
+                          h4("(Use host.docker.internal:8083/ as default)", style = "color:black"),
                           h2("Contact"),
                           h4("Please note that this App is a Work in Progress. 
                              If you encounter any error messages or other malfunctions, 
                              please contact the developers via:", style ="color:black"),h4("info@dadfir3.ch",  style ="color:blue"),
-                             h4("If you have any suggestions for new features or improvments
+                          h4("If you have any suggestions for new features or improvments
                              of the app, we appreciate your inputs.",style ="color:black")
                         ) #main panel close
-
+                      )#sidebarLayout close
              )  #tab panel close
-  )   #navbarPAGE close
+  )   #navbarPAGE closet
 )   #fluid Page close
+
 
 # Define server logic required to create the cash flows of a simple bond
 server <- function(input, output) {
   
   #reactive creation of the example bond
   # set the ACTUS serverURL
-  serverURL = "https://demo.actusfrf.org:8080/"
+  serverURL <- reactive(input$serverUrl)
+  #   serverURL = "https://demo.actusfrf.org:8080/"
   #   serverURL <- "http://ractus.ch:8080/"
   
   #read the data files from inside of the package
@@ -249,28 +265,28 @@ server <- function(input, output) {
     if(input$rfScenarioBond == "increasing Rates"){
       evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                             list(rfx_rising),
-                                            serverURL  
+                                            serverURL()  
       )
       })
     }
     if(input$rfScenarioBond == "decreasing Rates"){
       evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                             list(rfx_falling),
-                                            serverURL  
+                                            serverURL()  
       )
       })
     }
     if(input$rfScenarioBond == "steady Rates"){
       evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                             list(rfx_steady),
-                                            serverURL  
+                                            serverURL()  
       )
       })
     }
     if(input$rfScenarioBond == "recovering Rates"){
       evs1 <- reactive({generateEventSeries(contract = cnt1(), 
                                             list(rfx_recovering),
-                                            serverURL  
+                                            serverURL()  
       )
       })
     }
@@ -357,20 +373,20 @@ server <- function(input, output) {
     
     #create eventSeries for the selected contract
     if(input$rfScenario == "decreasing Rates"){
-      plotlist <- reactive(simulatePortfolio(ptf, serverURL, list(rfx_falling),
+      plotlist <- reactive(simulatePortfolio(ptf, serverURL(), list(rfx_falling),
                                              rfx_falling$riskFactorID))
     }
     
     if(input$rfScenario == "increasing Rates"){
-      plotlist <- reactive(simulatePortfolio(ptf, serverURL, list(rfx_rising),
+      plotlist <- reactive(simulatePortfolio(ptf, serverURL(), list(rfx_rising),
                                              rfx_rising$riskFactorID))
     }
     if(input$rfScenario == "steady Rates"){
-      plotlist <- reactive(simulatePortfolio(ptf, serverURL, list(rfx_steady),
+      plotlist <- reactive(simulatePortfolio(ptf, serverURL(), list(rfx_steady),
                                              rfx_rising$riskFactorID))
     }
     if(input$rfScenario == "recovering Rates"){
-      plotlist <- reactive(simulatePortfolio(ptf, serverURL, 
+      plotlist <- reactive(simulatePortfolio(ptf, serverURL(), 
                                              list(rfx_recovering),
                                              rfx_rising$riskFactorID))
     }
@@ -389,9 +405,9 @@ server <- function(input, output) {
       
       portfolioDF_u <- read.csv(cdfn_u)
       portfolioDF_u <- portfolioDF_u[,c("contractType","statusDate","contractRole","contractID",
-                                    "nominalInterestRate","currency","initialExchangeDate",
-                                    "premiumDiscountAtIED","maturityDate","notionalPrincipal",
-                                    "rateSpread","description")]
+                                        "nominalInterestRate","currency","initialExchangeDate",
+                                        "premiumDiscountAtIED","maturityDate","notionalPrincipal",
+                                        "rateSpread","description")]
       
       output$portfolioDF_u <- renderDataTable(portfolioDF_u,
                                               options = list(autoWidth = TRUE, scrollX = TRUE))
@@ -403,20 +419,20 @@ server <- function(input, output) {
       
       #create eventSeries for the selected contract
       if(input$rfScenarioCus == "decreasing Rates"){
-        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_falling),
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), list(rfx_falling),
                                                   rfx_falling$riskFactorID))
       }
       
       if(input$rfScenarioCus == "increasing Rates"){
-        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_rising),
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), list(rfx_rising),
                                                   rfx_rising$riskFactorID))
       }
       if(input$rfScenarioCus == "steady Rates"){
-        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, list(rfx_steady),
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), list(rfx_steady),
                                                   rfx_rising$riskFactorID))
       }
       if(input$rfScenarioCus == "recovering Rates"){
-        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL, 
+        plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), 
                                                   list(rfx_recovering),
                                                   rfx_rising$riskFactorID))
       }
@@ -437,4 +453,3 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
