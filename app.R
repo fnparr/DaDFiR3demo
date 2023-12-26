@@ -2,6 +2,7 @@ library(shiny)
 library(shinythemes)
 library(FEMSdevBase)
 library(ggplot2)
+library(TAF)
 
 shinycssloaders::withSpinner(
   plotOutput("plot")
@@ -140,7 +141,7 @@ ui <- fluidPage(
                       sidebarLayout(
                         sidebarPanel(width = 3,
                                      fileInput(inputId = "uploadedFile",
-                                               label = "Your csv file of ACTUS PAM Contracts",
+                                               label = "Your csv file of ACTUS Contracts",
                                                accept = ".csv",
                                                buttonLabel = "Browse...",
                                                placeholder = "No file selected"
@@ -403,18 +404,24 @@ server <- function(input, output) {
       cdfn_u <- file()$datapath
       rfdfn <- system.file("extdata","RiskFactors.csv",package = "FEMSdevBase")
       
+  #    TAF::dos2unix(cdfn_u)
       portfolioDF_u <- read.csv(cdfn_u)
+      
+   #   portfolioDF_u <- portfolioDF_u[,c("contractType","statusDate","contractRole","contractID",
+   #                                    "nominalInterestRate","currency","initialExchangeDate",
+   #                                     "premiumDiscountAtIED","maturityDate","notionalPrincipal",
+   #                                      "rateSpread","description")]
       portfolioDF_u <- portfolioDF_u[,c("contractType","statusDate","contractRole","contractID",
                                         "nominalInterestRate","currency","initialExchangeDate",
-                                        "premiumDiscountAtIED","maturityDate","notionalPrincipal",
-                                        "rateSpread","description")]
+                                        "maturityDate","notionalPrincipal")]
       
       output$portfolioDF_u <- renderDataTable(portfolioDF_u,
                                               options = list(autoWidth = TRUE, scrollX = TRUE))
       
       
       #create the portfolio with the respective files
-      ptf1   <-  samplePortfolio(cdfn_u,rfdfn)
+ #     ptf1   <-  samplePortfolio(cdfn_u,rfdfn)
+       ptf1 <- csvx2ptf(cdfn_u)
       
       
       #create eventSeries for the selected contract
