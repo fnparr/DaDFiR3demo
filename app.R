@@ -406,10 +406,6 @@ server <- function(input, output) {
 
       portfolioDF_u <- read.csv(cdfn_u)
       
-   #   portfolioDF_u <- portfolioDF_u[,c("contractType","statusDate","contractRole","contractID",
-   #                                    "nominalInterestRate","currency","initialExchangeDate",
-   #                                     "premiumDiscountAtIED","maturityDate","notionalPrincipal",
-   #                                      "rateSpread","description")]
       portfolioDF_u <- portfolioDF_u[,c("contractType","statusDate","contractRole","contractID",
                                         "nominalInterestRate","currency","initialExchangeDate",
                                         "maturityDate","notionalPrincipal")]
