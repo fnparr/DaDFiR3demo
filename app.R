@@ -403,8 +403,7 @@ server <- function(input, output) {
       file <- reactive(input$uploadedFile)
       cdfn_u <- file()$datapath
       rfdfn <- system.file("extdata","RiskFactors.csv",package = "FEMSdevBase")
-      
-  #    TAF::dos2unix(cdfn_u)
+
       portfolioDF_u <- read.csv(cdfn_u)
       
    #   portfolioDF_u <- portfolioDF_u[,c("contractType","statusDate","contractRole","contractID",
@@ -418,11 +417,7 @@ server <- function(input, output) {
       output$portfolioDF_u <- renderDataTable(portfolioDF_u,
                                               options = list(autoWidth = TRUE, scrollX = TRUE))
       
-      
-      #create the portfolio with the respective files
- #     ptf1   <-  samplePortfolio(cdfn_u,rfdfn)
        ptf1 <- csvx2ptf(cdfn_u)
-      
       
       #create eventSeries for the selected contract
       if(input$rfScenarioCus == "decreasing Rates"){
