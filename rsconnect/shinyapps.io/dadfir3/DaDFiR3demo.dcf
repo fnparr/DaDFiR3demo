@@ -5,9 +5,8 @@ account: dadfir3
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7763250
-bundleId: 6568842
+bundleId: 8090171
 url: https://dadfir3.shinyapps.io/DaDFiR3demo/
-when: 1669748964.38919
-lastSyncTime: 1669748964.3892
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: .RData

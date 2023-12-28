@@ -207,9 +207,11 @@ ui <- fluidPage(
                              "For a more detailed explanation of each contract term, consult the ",
                              tags$a("ACTUS Data Dictionary",     href="https://www.actusfrf.org/dictionary", target = "_blank"), style ="color:black"),
                           h2("Specification of ServerURL"),
-                          h4("In case you want to use a local installation of an ACTUS server, you can specify the serverURL in the sidebar of the Help Tab. By default, the ServerURL is set to:", 
+                          h4("In the initial (default) configuration, DaDFiR3demo uses the public ACTUS server at:",
                              tags$a("https://demo.actusfrf.org:8080/",href = "https://demo.actusfrf.org:8080/", target = "_blank") ,"(public actus server)", style = "color:black"),
-                          h4(tags$b("IMPORTANT:"),"If you use a docker version of actus-server your serverURL must be: host.docker.internal:PORT/)", style = "color:black"), 
+                          h4("Cloud instances of DaDFiR3demo can be reconfigured to use a different publicly accessible ACTUS server by entering the URL of the server in the box provided", style ="color:black"),
+                          h4("Local or dockerized instances of DaDFiR3demo can be be reconfigured to use any ACTUS server visible to them.", style ="color:black"),
+                          h4(tags$b("IMPORTANT:"),"If you use a local, dockerized actus-server your serverURL should be: host.docker.internal:PORT/)", style = "color:black"), 
                           h4("(Use host.docker.internal:8083/ as default)", style = "color:black"),
                           h2("Contact"),
                           h4("Please note that this App is a Work in Progress. 

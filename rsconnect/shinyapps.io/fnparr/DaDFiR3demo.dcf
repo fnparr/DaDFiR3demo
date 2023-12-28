@@ -5,8 +5,9 @@ account: fnparr
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7328753
-bundleId: 8089969
+bundleId: 8090162
 url: https://fnparr.shinyapps.io/DaDFiR3demo/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: .RData
