@@ -1,13 +1,12 @@
 name: DaDFiR3demo
-title: DaDFiR3demo
-username:
+title: DaDFiR3Demo
+username: fnparr
 account: fnparr
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7328753
-bundleId: 6504523
+bundleId: 8089969
 url: https://fnparr.shinyapps.io/DaDFiR3demo/
-when: 1668207324.28667
-lastSyncTime: 1668207324.28668
+version: 1
 asMultiple: FALSE
 asStatic: FALSE
