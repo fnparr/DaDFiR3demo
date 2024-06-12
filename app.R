@@ -206,6 +206,11 @@ ui <- fluidPage(
                              " - with any variable rate setting based on Market Object Code YC_EA_AAA.",
                              "For a more detailed explanation of each contract term, consult the ",
                              tags$a("ACTUS Data Dictionary",     href="https://www.actusfrf.org/dictionary", target = "_blank"), style ="color:black"),
+                         h4("Uploading Portfolio files which were edited in Microsoft Excel:",style ="color:red"),
+                         h4("This is possible but to avoid Excel reformatting date fields in a somewhat unpredictable way, values for all date attributes 
+                           of a contract must be entered in the format ‘ yyyy-mm-dd’.  Specifically (1) they must start with a blank space character and 
+                           (2) have the date coded  yyyy-mm-dd.  This forces Excel to assume that the field is character string data and NOT  a date – 
+                           hence it leaves them alone. The files", tags$a("BondPortfolioX.csv",href="https://github.com/fnparr/DaDFiR3demo/blob/main/samplePortfoliosX/BondPortfolioX.csv", target = "_blank"), "and",tags$a("AnnuityPortfolioX.csv",href="https://github.com/fnparr/DaDFiR3demo/blob/main/samplePortfoliosX/AnnuityPortfolioX.csv", target = "_blank"), "have this property and can be uploaded into the demo and analyzed." , style = "color:black"),
                           h2("Specification of ServerURL"),
                           h4("In case you want to use a local installation of an ACTUS server, you can specify the serverURL in the sidebar of the Help Tab. By default, the ServerURL is set to:", 
                              tags$a("https://demo.actusfrf.org:8080/",href = "https://demo.actusfrf.org:8080/", target = "_blank") ,"(public actus server)", style = "color:black"),
