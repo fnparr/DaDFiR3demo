@@ -124,7 +124,8 @@ ui <- fluidPage(
                                                    "decreasing Rates",
                                                    "steady Rates",
                                                    "recovering Rates")
-                                     )
+                                     ),
+                                     downloadButton("downloadData1", "Download Events"),
                         ),   #sidebarpanel Close
                         
                         mainPanel(width = 8 ,shinycssloaders::withSpinner(
@@ -161,7 +162,8 @@ ui <- fluidPage(
                                                    "decreasing Rates",
                                                    "steady Rates",
                                                    "recovering Rates")
-                                     )
+                                     ),
+                                     downloadButton("downloadData2", "Download Events"),
                         ),#sidebarpanel close
                         mainPanel(
                           textOutput("warning"),
@@ -225,7 +227,7 @@ ui <- fluidPage(
 
 
 # Define server logic required to create the cash flows of a simple bond
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   #reactive creation of the example bond
   # set the ACTUS serverURL
@@ -359,7 +361,7 @@ server <- function(input, output) {
     rfdfn <- system.file("extdata","RiskFactors.csv",package = "FEMSdevBase")
     
     #create the portfolio with the respective files
-    ptf   <-  samplePortfolio(cdfn,rfdfn)
+    ptf   <-  samplePortfolio(cdfn)
     
     portfolioDF <- read.csv(cdfn)
     #portfolioDF <- portfolioDF[ , colSums(portfolioDF == "NULL") < nrow(portfolioDF)] 
@@ -376,25 +378,40 @@ server <- function(input, output) {
     if(input$rfScenario == "decreasing Rates"){
       plotlist <- reactive(simulatePortfolio(ptf, serverURL(), list(rfx_falling),
                                              rfx_falling$riskFactorID))
+      evs <- generateEvents(serverURL = serverURL(),ptf = ptf,riskFactors = list(rfx_falling))
     }
     
     if(input$rfScenario == "increasing Rates"){
       plotlist <- reactive(simulatePortfolio(ptf, serverURL(), list(rfx_rising),
                                              rfx_rising$riskFactorID))
+      evs <- generateEvents(serverURL = serverURL(), ptf = ptf, riskFactors = list(rfx_rising))
     }
     if(input$rfScenario == "steady Rates"){
       plotlist <- reactive(simulatePortfolio(ptf, serverURL(), list(rfx_steady),
                                              rfx_rising$riskFactorID))
+      evs <- generateEvents(serverURL = serverURL(),ptf = ptf,riskFactors = list(rfx_steady))
     }
     if(input$rfScenario == "recovering Rates"){
       plotlist <- reactive(simulatePortfolio(ptf, serverURL(), 
                                              list(rfx_recovering),
                                              rfx_rising$riskFactorID))
+      evs <- generateEvents(serverURL = serverURL(),ptf = ptf,riskFactors = list(rfx_recovering))
     }
     
     output$CFPlot <- renderPlot({
       plotlist()[[input$analysisType]]
     })
+    output$downloadData1 <- downloadHandler(
+      filename = function() {
+        # Use the selected dataset as the suggested file name
+        paste0("events", ".csv")
+      },
+      content = function(file) {
+        # Write the dataset to the `file` that will be downloaded
+        write.csv(eventsLoL2DF(evs), file)
+      }
+    )
+    
     
   })   #observe close
   
@@ -419,20 +436,24 @@ server <- function(input, output) {
       if(input$rfScenarioCus == "decreasing Rates"){
         plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), list(rfx_falling),
                                                   rfx_falling$riskFactorID))
+        evs2 <- generateEvents(serverURL = serverURL(),ptf = ptf1,riskFactors = list(rfx_falling))
       }
       
       if(input$rfScenarioCus == "increasing Rates"){
         plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), list(rfx_rising),
                                                   rfx_rising$riskFactorID))
+        evs2 <- generateEvents(serverURL = serverURL(),ptf = ptf1,riskFactors = list(rfx_rising))
       }
       if(input$rfScenarioCus == "steady Rates"){
         plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), list(rfx_steady),
                                                   rfx_rising$riskFactorID))
+        evs2 <- generateEvents(serverURL = serverURL(),ptf = ptf1,riskFactors = list(rfx_steady))
       }
       if(input$rfScenarioCus == "recovering Rates"){
         plotlistCus <- reactive(simulatePortfolio(ptf1, serverURL(), 
                                                   list(rfx_recovering),
                                                   rfx_rising$riskFactorID))
+        evs2 <- generateEvents(serverURL = serverURL(),ptf = ptf1,riskFactors = list(rfx_recovering))
       }
       
       output$CFPlotCus <- renderPlot({
@@ -445,7 +466,25 @@ server <- function(input, output) {
       output$warning <- renderText("No File uploaded yet")
     }
     
+    output$downloadData2 <- downloadHandler(
+      filename = function() {
+        # Use the selected dataset as the suggested file name
+        paste0("events", ".csv")
+      },
+      content = function(file) {
+        # Write the dataset to the `file` that will be downloaded
+        write.csv(eventsLoL2DF(evs2), file)
+      }
+    )
+    
   })   #observe close
+  observeEvent(input$rateResetFreq, {
+    if (input$rateResetFreq == "Fixed rate") {
+      updateSliderInput(session, "maturity", min = 1, max = 30, value = 5, step = 1)
+    } else {
+      updateSliderInput(session, "maturity", min = 1, max = 10, value = 5, step = 1)
+    }
+  })
   
 }      #server close
 
