@@ -3,6 +3,7 @@ library(shinythemes)
 library(FEMSdevBase)
 library(ggplot2)
 library(TAF)
+library(DT)
 
 shinycssloaders::withSpinner(
   plotOutput("plot")
@@ -96,7 +97,7 @@ ui <- fluidPage(
                                                width = "800px",
                                                height="500px")
                                   ),     #spinnerclose,
-                                  dataTableOutput("CFDF")
+                                  DTOutput("CFDF")
                         )    #main panel close
                       ) #sidebar close
              ),   #tabpanel close
@@ -132,7 +133,7 @@ ui <- fluidPage(
                           plotOutput("CFPlot")
                         ),   #spinner close
                         column(
-                          dataTableOutput("portfolioDF"),
+                          DTOutput("portfolioDF"),
                           width = 12) #column close
                         )   #main panel close
                       )   #sidebarLayout close
@@ -174,7 +175,7 @@ ui <- fluidPage(
                           )),
                           plotOutput("CFPlotCus"),
                           column(
-                            dataTableOutput("portfolioDF_u"),
+                            DTOutput("portfolioDF_u"),
                             width = 12)#column close
                         )  #mainPanel close
                       )  #sidebarlayout close
@@ -182,7 +183,7 @@ ui <- fluidPage(
              tabPanel("Help",
                       sidebarLayout(
                         sidebarPanel(
-                          textInput("serverUrl","Specify your server URL",value = "https://demo.actusfrf.org:8080/")
+                          textInput("serverUrl","Specify your server URL",value = "https://dadfir3-app.zhaw.ch/")
                         ),
                         mainPanel(
                           h2("Interest Rate Scenarios"),
@@ -304,7 +305,7 @@ server <- function(input, output, session) {
     })
     
     #optional data table of the event list
-    output$CFDF <- renderDataTable({
+    output$CFDF <- renderDT({
       evs1()$events_df
     })
   })   #observe close
@@ -376,7 +377,7 @@ server <- function(input, output, session) {
                                   "premiumDiscountAtIED","maturityDate","notionalPrincipal",
                                   "rateSpread","description")]
     
-    output$portfolioDF <- renderDataTable(portfolioDF,
+    output$portfolioDF <- renderDT(portfolioDF,
                                           options = list(autoWidth = TRUE, scrollX = TRUE))
     
     #create eventSeries for the selected contract
@@ -432,7 +433,7 @@ server <- function(input, output, session) {
                                         "nominalInterestRate","currency","initialExchangeDate",
                                         "maturityDate","notionalPrincipal")]
       
-      output$portfolioDF_u <- renderDataTable(portfolioDF_u,
+      output$portfolioDF_u <- renderDT(portfolioDF_u,
                                               options = list(autoWidth = TRUE, scrollX = TRUE))
       
        ptf1 <- csvx2ptf(cdfn_u)
