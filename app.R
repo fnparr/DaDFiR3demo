@@ -11,7 +11,8 @@ shinycssloaders::withSpinner(
 
 # 
 # Define UI for application that visualizes cashflows for a example bond
-ui <- fluidPage(
+ui <- function(request){
+  fluidPage(
   theme = shinytheme("cerulean"),
   
   #top images 
@@ -230,7 +231,7 @@ ui <- fluidPage(
              )  #tab panel close
   )   #navbarPAGE closet
 )   #fluid Page close
-
+}
 
 # Define server logic required to create the cash flows of a simple bond
 server <- function(input, output, session) {
@@ -491,8 +492,12 @@ server <- function(input, output, session) {
       updateSliderInput(session, "maturity", min = 1, max = 10, value = 5, step = 1)
     }
   })
-  
+  observe({
+    reactiveValuesToList(input)
+    session$doBookmark()
+  })
+  onBookmarked(updateQueryString)
 }      #server close
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, enableBookmarking = "url")
