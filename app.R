@@ -217,7 +217,7 @@ ui <- function(request){
                            hence it leaves them alone. The files", tags$a("BondPortfolioX.csv",href="https://github.com/fnparr/DaDFiR3demo/blob/main/samplePortfoliosX/BondPortfolioX.csv", target = "_blank"), "and",tags$a("AnnuityPortfolioX.csv",href="https://github.com/fnparr/DaDFiR3demo/blob/main/samplePortfoliosX/AnnuityPortfolioX.csv", target = "_blank"), "have this property and can be uploaded into the demo and analyzed." , style = "color:black"),
                           h2("Specification of ServerURL"),
                           h4("In case you want to use a local installation of an ACTUS server, you can specify the serverURL in the sidebar of the Help Tab. By default, the ServerURL is set to:", 
-                             tags$a("https://demo.actusfrf.org:8080/",href = "https://demo.actusfrf.org:8080/", target = "_blank") ,"(public actus server)", style = "color:black"),
+                             tags$a("https://dadfir3-app.zhaw.ch/",href = "https://dadfir3-app.zhaw.ch/", target = "_blank") ,"(public DaDFiR3 actus server hosted in Switzerland)", style = "color:black"),
                           h4(tags$b("IMPORTANT:"),"If you use a docker version of actus-server your serverURL must be: host.docker.internal:PORT/)", style = "color:black"), 
                           h4("(Use host.docker.internal:8083/ as default)", style = "color:black"),
                           h2("Contact"),
